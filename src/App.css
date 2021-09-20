@@ -60,7 +60,7 @@ button {
 .modify-container {
   transition: opacity .3s;
   display: inline-block;
-  padding: 4px 8px;
+  padding: 10px 14px;
   position: absolute;
   right: 8px;
   top: 20px;
@@ -68,22 +68,28 @@ button {
   background-color: #575195;
   box-shadow: 0 1px 4px rgb(0 0 0 / 10%);
   border-radius: 3px;
-  top: 0px;
+  top: -13px;
 }
 
 .code-block {
   position: relative;
+  margin-top: 20px;
 }
 
 .code-block:hover .modify-container {
   opacity: 1;
 }
 
-.modify-container .delete {
+.modify-container div {
   color: #fff;
   display: inline-block;
   cursor: pointer;
   font-size: 14px;
+}
+
+.modify-container div:first-of-type {
+  display: inline-block;
+  margin-right: 18px;
 }
 
 .editable-code {
@@ -94,11 +100,6 @@ button {
 
 .editable-code div[contenteditable=true] {
   outline: 1px solid #575195;
-}
-
-.code-script {
-  white-space: break-spaces;
-  word-break:break-all;
 }
 
 .jsfiddle-form {

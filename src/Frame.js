@@ -19,8 +19,8 @@ class Frame extends Component {
 
     /* Mock data for testing */
     // const mockArr = []
-    // const mockJson = `var table = document.createElement('table');\ntable.style.border = '1px solid blue';\nfor (var i = 0; i < 3; i++) {\n  var row = document.createElement('tr');\n  for (var j = 0; j < 3; j++) {\n    var cell = document.createElement('td');\n    cell.style.border = '1px solid blue';\n    row.appendChild(cell);\n  }\n  table.appendChild(row);\n}\ndocument.body.appendChild(table);\n\n`
-    // const mockJson2 = `var table = new table();\n\n`
+    // const mockJson = `/* Command: create 3*3 2-d array having blue borders */\nvar table = document.createElement('table');\ntable.style.border = '1px solid blue';\nfor (var i = 0; i < 3; i++) {\n  var row = document.createElement('tr');\n  for (var j = 0; j < 3; j++) {\n    var cell = document.createElement('td');\n    cell.style.border = '1px solid blue';\n    row.appendChild(cell);\n  }\n  table.appendChild(row);\n}\ndocument.body.appendChild(table);\n\n`
+    // const mockJson2 = `/* Command: print hello world */\nvar helloWorld = document.createElement('div');\nhelloWorld.innerHTML = 'Hello World';\ndocument.body.appendChild(helloWorld);`
     // mockArr.push(mockJson)
     // mockArr.push(mockJson2)
     // this.promptArr = mockArr
@@ -30,6 +30,10 @@ class Frame extends Component {
 
   getCode = () => {
     return new Promise(resolve => {
+      if (this.props.editComplete) {
+        const script = this.props.getUpdatedScript()
+        this.updateFrame(script)
+      }
       if (typeof this.props.deleteIndex !== 'undefined') {
         const index = this.props.deleteIndex
         this.promptArr.splice(index, 1)
@@ -50,67 +54,46 @@ class Frame extends Component {
           resolve('rejected')
           console.log(err)
         })
-    }
+      }
 
       if (this.props.query) {
-        if (this.props.query === 'revert last') {
-          this.promptArr.pop()
-          const script = this.promptArr.join('')
+        this.setState({
+          loading: true
+        })
+
+        axios({
+          url: 'http://localhost:5000/code',
+          method: 'post',
+          headers: {
+            'content-Type': 'application/json'
+          },
+          data: {query: this.props.query}
+        }).then((result) => {
+          let promptArr = result.data
+          promptArr.shift()
+          this.promptArr = promptArr
+          const script = promptArr.join('')
           this.updateFrame(script)
-          this.props.code(this.promptArr)
-          axios({
-            url: 'http://localhost:5000/revert',
-            method: 'get',
-            headers: {
-              'content-Type': 'application/json'
-            }
-          }).then((result) => {
-            // console.log(result)
-            resolve('resolved')
-          }).catch((err) => {
-            resolve('rejected')
-            // console.log(err)
-          })
-        } else {
+          this.props.code(promptArr)
           this.setState({
-            loading: true
+            loading: false
           })
-  
-          axios({
-            url: 'http://localhost:5000/code',
-            method: 'post',
-            headers: {
-              'content-Type': 'application/json'
-            },
-            data: {query: this.props.query}
-          }).then((result) => {
-            // console.log('------------', result.data);
-            let promptArr = result.data
-            promptArr.shift()
-            this.promptArr = promptArr
-            const script = promptArr.join('')
-            this.updateFrame(script)
-            this.props.code(promptArr)
-            this.setState({
-              loading: false
-            })
-            resolve('resolved')
-          }).catch(() => {
-            this.setState({
-              loading: false
-            })
-            resolve('rejected')
+          resolve('resolved')
+        }).catch(() => {
+          this.setState({
+            loading: false
           })
-          
-          /* Mock axios call for promise */
-          // setTimeout(() => {
-          //   this.setState({
-          //     loading: false
-          //   })
-          //   resolve('resolved')
-          // }, 3000);
+          resolve('rejected')
+        })
+        
+        /* Mock axios call for promise */
+        // setTimeout(() => {
+        //   this.setState({
+        //     loading: false
+        //   })
+        //   resolve('resolved')
+        // }, 3000);
   
-        }
       }
     })
 
@@ -136,7 +119,7 @@ class Frame extends Component {
   handleClear = () => {
     this.script = ''
     this.updateFrame('')
-    this.props.code('')
+    this.props.code([])
     axios({
       url: 'http://localhost:5000/clear',
       method: 'get',
@@ -144,7 +127,7 @@ class Frame extends Component {
         'content-Type': 'application/json'
       }
     }).then((result) => {
-      // console.log('------------', result);
+      console.log('cleared');
     }).catch(() => {
       console.log('error while clearing');
     })
